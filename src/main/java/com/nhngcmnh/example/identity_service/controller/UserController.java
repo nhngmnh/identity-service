@@ -10,6 +10,8 @@ import com.nhngcmnh.example.identity_service.dto.request.UserUpdateRequest;
 import com.nhngcmnh.example.identity_service.entity.User;
 import com.nhngcmnh.example.identity_service.service.UserService;
 
+import jakarta.validation.Valid;
+
 @RequestMapping("/users")
 @RestController
 public class UserController {
@@ -17,7 +19,7 @@ public class UserController {
     private UserService userService;
 
     @PostMapping
-    public User createUser(@RequestBody UserCreationRequest request){
+    public User createUser(@RequestBody @Valid UserCreationRequest request){
         return userService.createUser(request);
     }
 

@@ -13,38 +13,49 @@ import com.nhngcmnh.example.identity_service.dto.request.UserUpdateRequest;
 
 @Service
 public class UserService {
+
     @Autowired
     private UserRepository userRepository;
 
+    // ✅ Tạo user mới, kiểm tra trùng username trước khi lưu
     public User createUser(UserCreationRequest request) {
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new IllegalArgumentException("Username đã tồn tại");
+        }
+
         User user = new User();
         user.setDob(request.getDob());
         user.setUsername(request.getUsername());
         user.setPassword(request.getPassword());
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
+
         return userRepository.save(user); 
     }
 
+    // ✅ Lấy danh sách tất cả user
     public List<User> getUsers() {
         return userRepository.findAll();
     }
 
+    // ✅ Lấy thông tin user theo ID
     public User getUser(String id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("User not found with id: " + id));
+                .orElseThrow(() -> new NoSuchElementException("User không tồn tại với ID: " + id));
     }
 
+    // ✅ Xóa user theo ID
     public void deleteUser(String id) {
         if (!userRepository.existsById(id)) {
-            throw new NoSuchElementException("User not found with id: " + id);
+            throw new NoSuchElementException("User không tồn tại với ID: " + id);
         }
         userRepository.deleteById(id);
     }
 
+    // ✅ Cập nhật user theo ID
     public User updateUser(String id, UserUpdateRequest request) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("User not found with id: " + id));
+                .orElseThrow(() -> new NoSuchElementException("User không tồn tại với ID: " + id));
 
         user.setPassword(request.getPassword());
         user.setFirstName(request.getFirstName());

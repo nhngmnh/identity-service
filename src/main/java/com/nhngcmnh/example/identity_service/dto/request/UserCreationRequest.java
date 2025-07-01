@@ -2,8 +2,12 @@ package com.nhngcmnh.example.identity_service.dto.request;
 
 import java.time.LocalDate;
 
+import jakarta.validation.constraints.Size;
+
 public class UserCreationRequest {
+    @Size(min=3, message="toi thieu 3 ky tu")
     private String username;
+    @Size(min=8, message="toi thieu 8 ky tu")
     private String password;
     private String firstName;
     private String lastName;
