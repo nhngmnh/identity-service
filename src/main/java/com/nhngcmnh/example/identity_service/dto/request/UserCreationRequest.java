@@ -5,9 +5,9 @@ import java.time.LocalDate;
 import jakarta.validation.constraints.Size;
 
 public class UserCreationRequest {
-    @Size(min=3, message="toi thieu 3 ky tu")
+    @Size(min = 3, message = "INVALID_INPUT")
     private String username;
-    @Size(min=8, message="toi thieu 8 ky tu")
+    @Size(min = 8, message = "INVALID_INPUT")
     private String password;
     private String firstName;
     private String lastName;

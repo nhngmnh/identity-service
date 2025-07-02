@@ -4,40 +4,94 @@ import java.util.NoSuchElementException;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import com.nhngcmnh.example.identity_service.dto.request.ApiResponse;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // ❗ Xử lý IllegalArgumentException (ví dụ validate đầu vào sai)
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<String> handleIllegalArgument(IllegalArgumentException ex) {
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ex.getMessage());
+    /* ---------- LỖI ĐÃ ĐỊNH NGHĨA BẰNG AppException ---------- */
+    @ExceptionHandler(AppException.class)
+    public ResponseEntity<ApiResponse<Object>> handleAppException(AppException ex) {
+        return buildResponse(
+                ex.getErrorCode(),           // mã lỗi đặc thù
+                HttpStatus.BAD_REQUEST,      // HTTP 400
+                null
+        );
     }
-
-    // Xử lý NoSuchElementException (không tìm thấy user hoặc đối tượng khác)
+    /* ---------- NOT FOUND ---------- */
     @ExceptionHandler(NoSuchElementException.class)
-    public ResponseEntity<String> handleNoSuchElement(NoSuchElementException ex) {
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(ex.getMessage());
+    public ResponseEntity<ApiResponse<Object>> handleNoSuchElement(NoSuchElementException ex) {
+        return buildResponse(
+                ErrorCode.RESOURCE_NOT_FOUND,
+                HttpStatus.NOT_FOUND,
+                null
+        );
     }
 
-    // ❗ Xử lý RuntimeException (fallback cho lỗi hệ thống chưa rõ)
+    /* ---------- Fallback cho mọi RuntimeException chưa bắt ---------- */
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<String> handleRuntime(RuntimeException ex) {
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ex.getMessage());
+    public ResponseEntity<ApiResponse<Object>> handleRuntime(RuntimeException ex) {
+        return buildResponse(
+                ErrorCode.INTERNAL_ERROR,
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                null
+        );
     }
 
-    // ❗ Xử lý Exception chung (fallback cuối)
+    /* ---------- Fallback cuối cùng ---------- */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> handleGenericException(Exception ex) {
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Lỗi không xác định: " + ex.getMessage());
+    public ResponseEntity<ApiResponse<Object>> handleGeneric(Exception ex) {
+        return buildResponse(
+                ErrorCode.INTERNAL_ERROR,
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                null
+        );
     }
+
+    /* ---------- Helper chung ---------- */
+    private ResponseEntity<ApiResponse<Object>> buildResponse(
+            ErrorCode errorCode,
+            HttpStatus status,
+            Object data) {
+
+        ApiResponse<Object> body = new ApiResponse<>(
+                false,
+                errorCode.getMessage(),
+                errorCode.getCode(),
+                data
+        );
+        return ResponseEntity.status(status).body(body);
+    }
+    /* ---------- LỖI VALIDATION ---------- */
+@ExceptionHandler(MethodArgumentNotValidException.class)
+public ResponseEntity<ApiResponse<Object>> handleValidationException(MethodArgumentNotValidException ex) {
+    FieldError fieldError = ex.getBindingResult().getFieldError();
+
+    ErrorCode errorCode = ErrorCode.INVALID_KEY; // fallback mặc định
+
+    if (fieldError != null) {
+        try {
+            // Giả sử message chính là tên của ErrorCode enum
+            errorCode = ErrorCode.valueOf(fieldError.getDefaultMessage());
+        } catch (IllegalArgumentException e) {
+            // Nếu không khớp enum nào, giữ fallback là INVALID_INPUT
+        }
+    }
+
+    ApiResponse<Object> body = new ApiResponse<>(
+            false,
+            errorCode.getMessage(),
+            errorCode.getCode(),
+            null
+    );
+
+    return ResponseEntity.badRequest().body(body);
+}
+
+
 }

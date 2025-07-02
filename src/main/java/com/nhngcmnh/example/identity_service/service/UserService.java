@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.nhngcmnh.example.identity_service.entity.User;
+import com.nhngcmnh.example.identity_service.exception.AppException;
+import com.nhngcmnh.example.identity_service.exception.ErrorCode;
 import com.nhngcmnh.example.identity_service.repository.UserRepository;
 import com.nhngcmnh.example.identity_service.dto.request.UserCreationRequest;
 import com.nhngcmnh.example.identity_service.dto.request.UserUpdateRequest;
@@ -20,7 +22,7 @@ public class UserService {
     // ✅ Tạo user mới, kiểm tra trùng username trước khi lưu
     public User createUser(UserCreationRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
-            throw new IllegalArgumentException("Username đã tồn tại");
+            throw new AppException(ErrorCode.USER_EXISTED);
         }
 
         User user = new User();
