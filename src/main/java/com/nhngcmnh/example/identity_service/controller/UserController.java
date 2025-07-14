@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.nhngcmnh.example.identity_service.dto.request.UserCreationRequest;
 import com.nhngcmnh.example.identity_service.dto.request.UserUpdateRequest;
+import com.nhngcmnh.example.identity_service.dto.response.UserResponse;
 import com.nhngcmnh.example.identity_service.entity.User;
 import com.nhngcmnh.example.identity_service.service.UserService;
 
@@ -19,7 +20,7 @@ public class UserController {
     private UserService userService;
 
     @PostMapping
-    public User createUser(@RequestBody @Valid UserCreationRequest request){
+    public UserResponse createUser(@RequestBody @Valid UserCreationRequest request){
         return userService.createUser(request);
     }
 
@@ -29,12 +30,12 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public User getUser(@PathVariable String id){
+    public UserResponse getUser(@PathVariable String id){
         return userService.getUser(id);
     }
 
     @PutMapping("/{id}")
-    public User updateUser(@PathVariable String id, @RequestBody UserUpdateRequest request){
+    public UserResponse updateUser(@PathVariable String id, @RequestBody UserUpdateRequest request){
         return userService.updateUser(id, request);
     }
 

@@ -9,30 +9,30 @@ import org.springframework.stereotype.Service;
 import com.nhngcmnh.example.identity_service.entity.User;
 import com.nhngcmnh.example.identity_service.exception.AppException;
 import com.nhngcmnh.example.identity_service.exception.ErrorCode;
+import com.nhngcmnh.example.identity_service.mapper.UserMapper;
 import com.nhngcmnh.example.identity_service.repository.UserRepository;
 import com.nhngcmnh.example.identity_service.dto.request.UserCreationRequest;
 import com.nhngcmnh.example.identity_service.dto.request.UserUpdateRequest;
+import com.nhngcmnh.example.identity_service.dto.response.UserResponse;
 
 @Service
 public class UserService {
 
     @Autowired
     private UserRepository userRepository;
-
+    @Autowired
+    private UserMapper userMapper;
     // ✅ Tạo user mới, kiểm tra trùng username trước khi lưu
-    public User createUser(UserCreationRequest request) {
+    public UserResponse createUser(UserCreationRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
 
-        User user = new User();
-        user.setDob(request.getDob());
-        user.setUsername(request.getUsername());
-        user.setPassword(request.getPassword());
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
-
-        return userRepository.save(user); 
+        User user = userMapper.toUser(request);
+        
+      userRepository.save(user); 
+        return userMapper.toUserResponse(user);
+        
     }
 
     // ✅ Lấy danh sách tất cả user
@@ -41,9 +41,9 @@ public class UserService {
     }
 
     // ✅ Lấy thông tin user theo ID
-    public User getUser(String id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("User không tồn tại với ID: " + id));
+    public UserResponse getUser(String id) {
+        return userMapper.toUserResponse(userRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("User không tồn tại với ID: " + id)));
     }
 
     // ✅ Xóa user theo ID
@@ -55,15 +55,13 @@ public class UserService {
     }
 
     // ✅ Cập nhật user theo ID
-    public User updateUser(String id, UserUpdateRequest request) {
+    public UserResponse updateUser(String id, UserUpdateRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("User không tồn tại với ID: " + id));
 
-        user.setPassword(request.getPassword());
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
-        user.setDob(request.getDob());
+        userMapper.updateUser(user, request);
 
-        return userRepository.save(user);
+     userRepository.save(user);
+     return userMapper.toUserResponse(user);
     }
 }
