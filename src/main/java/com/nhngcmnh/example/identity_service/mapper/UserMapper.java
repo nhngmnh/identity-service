@@ -10,6 +10,7 @@ import com.nhngcmnh.example.identity_service.entity.User;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {
+    @org.mapstruct.Mapping(target = "id", ignore = true)
     User toUser (UserCreationRequest request);
     void updateUser(@MappingTarget User user, UserUpdateRequest request);
     UserResponse toUserResponse(User user);

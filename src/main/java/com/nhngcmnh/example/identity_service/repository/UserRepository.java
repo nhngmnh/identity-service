@@ -9,5 +9,5 @@ import com.nhngcmnh.example.identity_service.entity.User;
 @Repository
 public interface UserRepository extends JpaRepository< User, String > {    
     boolean existsByUsername(String username);
-    boolean existsById(String id);
+    boolean existsById(@org.springframework.lang.NonNull String id);
 } 

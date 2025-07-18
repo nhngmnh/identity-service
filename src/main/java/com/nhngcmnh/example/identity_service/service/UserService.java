@@ -15,6 +15,8 @@ import com.nhngcmnh.example.identity_service.dto.request.UserCreationRequest;
 import com.nhngcmnh.example.identity_service.dto.request.UserUpdateRequest;
 import com.nhngcmnh.example.identity_service.dto.response.UserResponse;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 @Service
 public class UserService {
 
@@ -22,6 +24,8 @@ public class UserService {
     private UserRepository userRepository;
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     // ✅ Tạo user mới, kiểm tra trùng username trước khi lưu
     public UserResponse createUser(UserCreationRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -29,10 +33,10 @@ public class UserService {
         }
 
         User user = userMapper.toUser(request);
-        
-      userRepository.save(user); 
+        // Mã hóa mật khẩu trước khi lưu
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        userRepository.save(user);
         return userMapper.toUserResponse(user);
-        
     }
 
     // ✅ Lấy danh sách tất cả user
@@ -60,8 +64,11 @@ public class UserService {
                 .orElseThrow(() -> new NoSuchElementException("User không tồn tại với ID: " + id));
 
         userMapper.updateUser(user, request);
-
-     userRepository.save(user);
-     return userMapper.toUserResponse(user);
+        // Nếu có mật khẩu mới, mã hóa trước khi lưu
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+        userRepository.save(user);
+        return userMapper.toUserResponse(user);
     }
 }
