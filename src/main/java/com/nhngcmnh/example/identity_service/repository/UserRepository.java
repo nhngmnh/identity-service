@@ -10,4 +10,5 @@ import com.nhngcmnh.example.identity_service.entity.User;
 public interface UserRepository extends JpaRepository< User, String > {    
     boolean existsByUsername(String username);
     boolean existsById(@org.springframework.lang.NonNull String id);
+    java.util.Optional<User> findByUsername(String username);
 } 
