@@ -1,4 +1,3 @@
-
 package com.nhngcmnh.example.identity_service.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +11,8 @@ import com.nhngcmnh.example.identity_service.dto.request.LoginRequest;
 import com.nhngcmnh.example.identity_service.dto.request.ApiResponse;
 import com.nhngcmnh.example.identity_service.service.AuthService;
 import com.nhngcmnh.example.identity_service.dto.response.AuthResponse;
+import com.nhngcmnh.example.identity_service.dto.request.IntrospectRequest;
+import com.nhngcmnh.example.identity_service.dto.response.IntrospectResponse;
 
 @RestController
 @RequestMapping("/auth")
@@ -26,6 +27,17 @@ public class AuthController {
                 .success(true)
                 .data(authResponse)
                 .message("Đăng nhập thành công")
+                .code(0)
+                .build());
+    }
+
+    @PostMapping("/introspect")
+    public ResponseEntity<ApiResponse<IntrospectResponse>> introspect(@RequestBody IntrospectRequest request) {
+        IntrospectResponse response = authService.introspect(request);
+        return ResponseEntity.ok(ApiResponse.<IntrospectResponse>builder()
+                .success(true)
+                .data(response)
+                .message("Introspect thành công")
                 .code(0)
                 .build());
     }

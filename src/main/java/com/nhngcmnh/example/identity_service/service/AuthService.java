@@ -12,7 +12,11 @@ import com.nhngcmnh.example.identity_service.dto.response.AuthResponse;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import java.util.Date;
+import com.nhngcmnh.example.identity_service.dto.request.IntrospectRequest;
+import com.nhngcmnh.example.identity_service.dto.response.IntrospectResponse;
 
 @Service
 public class AuthService {
@@ -35,6 +39,24 @@ public class AuthService {
                 .result(true)
                 .token(token)
                 .build();
+    }
+
+    public IntrospectResponse introspect(IntrospectRequest request) {
+        boolean valid = true;
+        String message = "Token hợp lệ";
+        try {
+            Jwts.parserBuilder()
+                .setSigningKey(Keys.hmacShaKeyFor(JWT_SECRET.getBytes()))
+                .build()
+                .parseClaimsJws(request.getToken());
+        } catch (ExpiredJwtException e) {
+            valid = false;
+            message = "Token đã hết hạn";
+        } catch (JwtException e) {
+            valid = false;
+            message = "Token không hợp lệ";
+        }
+        return IntrospectResponse.builder().valid(valid).message(message).build();
     }
 
     private String generateToken(User user) {
