@@ -3,6 +3,7 @@ package com.nhngcmnh.example.identity_service.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 
 import com.nhngcmnh.example.identity_service.entity.User;
 import com.nhngcmnh.example.identity_service.exception.AppException;
@@ -25,7 +26,8 @@ public class AuthService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    protected static final String JWT_SECRET = "my_super_secret_jwt_key_2025_identity_service";
+    @Value("${jwt.secret}")
+    protected String JWT_SECRET;
     private static final long EXPIRATION_TIME = 60 * 60 * 1000; // 1 hour in ms
 
     public AuthResponse login(String username, String password) {

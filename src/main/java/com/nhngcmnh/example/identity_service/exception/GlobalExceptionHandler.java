@@ -79,7 +79,7 @@ public ResponseEntity<ApiResponse<Object>> handleValidationException(MethodArgum
             // Giả sử message chính là tên của ErrorCode enum
             errorCode = ErrorCode.valueOf(fieldError.getDefaultMessage());
         } catch (IllegalArgumentException e) {
-            // Nếu không khớp enum nào, giữ fallback là INVALID_INPUT
+            // Nếu không khớp enum nào, giữ fallback là INVALID_KEY
         }
     }
 
