@@ -112,6 +112,19 @@
       <version>0.11.5</version>
       <scope>runtime</scope>
     </dependency>
+    <!-- SLF4J API -->
+<dependency>
+  <groupId>org.slf4j</groupId>
+  <artifactId>slf4j-api</artifactId>
+  <version>2.0.13</version>
+</dependency>
+<!-- SLF4J Simple Implementation (dùng cho dev, production nên dùng logback) -->
+<dependency>
+  <groupId>org.slf4j</groupId>
+  <artifactId>slf4j-simple</artifactId>
+  <version>2.0.13</version>
+  <scope>runtime</scope>
+</dependency>
   </dependencies>
 
   <build>

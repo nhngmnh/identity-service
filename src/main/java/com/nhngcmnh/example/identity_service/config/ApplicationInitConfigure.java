@@ -23,7 +23,7 @@ public class ApplicationInitConfigure {
     PasswordEncoder passwordEncoder;
     @Bean
     ApplicationRunner applicationRunner(UserRepository userRepository) {
-        return args -> {
+        return _ -> {
             log.info("[INIT] Kiểm tra tài khoản admin...");
             if (userRepository.findByUsername("admin").isEmpty()) {
                 log.info("[INIT] Chưa có admin, tiến hành tạo mới.");
