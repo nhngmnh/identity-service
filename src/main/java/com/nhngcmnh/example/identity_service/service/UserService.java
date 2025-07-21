@@ -33,6 +33,10 @@ public class UserService {
         }
 
         User user = userMapper.toUser(request);
+        // Set role mặc định là USER
+        java.util.HashSet<String> roles = new java.util.HashSet<>();
+        roles.add("USER");
+        user.setRoles(roles);
         // Mã hóa mật khẩu trước khi lưu
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         userRepository.save(user);

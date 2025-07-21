@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import lombok.extern.slf4j.Slf4j;
 
 import com.nhngcmnh.example.identity_service.dto.request.UserCreationRequest;
 import com.nhngcmnh.example.identity_service.dto.request.UserUpdateRequest;
@@ -15,6 +16,7 @@ import jakarta.validation.Valid;
 
 @RequestMapping("/users")
 @RestController
+@Slf4j
 public class UserController {
     @Autowired
     private UserService userService;

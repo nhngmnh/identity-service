@@ -1,3 +1,4 @@
+
 package com.nhngcmnh.example.identity_service.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,11 @@ import com.nhngcmnh.example.identity_service.dto.response.IntrospectResponse;
 
 @Service
 public class AuthService {
+    // Tạo chuỗi scope chuẩn từ roles, cách nhau bởi dấu cách
+    private String builderScope(User user) {
+        if (user.getRoles() == null || user.getRoles().isEmpty()) return "";
+        return String.join(" ", user.getRoles());
+    }
     @Autowired
     private UserRepository userRepository;
     @Autowired
@@ -66,7 +72,8 @@ public class AuthService {
         Date expiryDate = new Date(now.getTime() + EXPIRATION_TIME);
         return Jwts.builder()
                 .setSubject(user.getId())
-                .claim("username", user.getUsername())
+                .claim("user", user)
+                .claim("scope", builderScope(user))
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(Keys.hmacShaKeyFor(JWT_SECRET.getBytes()), SignatureAlgorithm.HS256)
