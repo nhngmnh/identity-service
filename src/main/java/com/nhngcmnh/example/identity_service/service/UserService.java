@@ -1,4 +1,6 @@
+
 package com.nhngcmnh.example.identity_service.service;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -43,15 +45,19 @@ public class UserService {
         return userMapper.toUserResponse(user);
     }
 
-    // ✅ Lấy danh sách tất cả user
+    @PreAuthorize("hasRole('ADMIN')")
     public List<User> getUsers() {
         return userRepository.findAll();
     }
 
-    // ✅ Lấy thông tin user theo ID
+    // ✅ Lấy thông tin user theo ID (không phân quyền ở đây)
     public UserResponse getUser(String id) {
         return userMapper.toUserResponse(userRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("User không tồn tại với ID: " + id)));
+    }
+
+    public UserResponse getMyInfo(String id) {
+        return getUser(id);
     }
 
     // ✅ Xóa user theo ID

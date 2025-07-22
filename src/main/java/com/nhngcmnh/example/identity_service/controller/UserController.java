@@ -1,5 +1,8 @@
 package com.nhngcmnh.example.identity_service.controller;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +37,13 @@ public class UserController {
     @GetMapping("/{id}")
     public UserResponse getUser(@PathVariable String id){
         return userService.getUser(id);
+    }
+
+    // Endpoint cho user lấy thông tin của chính mình
+    @GetMapping("/myInfo")
+    public UserResponse getMyInfo(@AuthenticationPrincipal Jwt jwt) {
+        String userId = jwt.getSubject();
+        return userService.getUser(userId);
     }
 
     @PutMapping("/{id}")
