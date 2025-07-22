@@ -1,5 +1,8 @@
 
 package com.nhngcmnh.example.identity_service.config;
+import com.nhngcmnh.example.identity_service.dto.request.ApiResponse;
+import com.nhngcmnh.example.identity_service.exception.ErrorCode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -49,6 +52,19 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/users", "/auth/login", "/auth/introspect").permitAll()
                 .requestMatchers(HttpMethod.GET, "/users").hasRole("ADMIN")
                 .anyRequest().authenticated()
+            )
+            .exceptionHandling(exception -> exception
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(ErrorCode.UNAUTHENTICATION.getStatus().value());
+                    response.setContentType("application/json");
+                    ApiResponse<Object> body = new ApiResponse<>(
+                        false,
+                        ErrorCode.UNAUTHENTICATION.getMessage(),
+                        ErrorCode.UNAUTHENTICATION.getCode(),
+                        null
+                    );
+                    new ObjectMapper().writeValue(response.getOutputStream(), body);
+                })
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {
                 jwt.decoder(jwtDecoder());

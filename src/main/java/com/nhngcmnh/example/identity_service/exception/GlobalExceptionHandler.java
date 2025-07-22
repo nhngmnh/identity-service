@@ -1,7 +1,8 @@
+
+
 package com.nhngcmnh.example.identity_service.exception;
-
+import org.springframework.security.access.AccessDeniedException;
 import java.util.NoSuchElementException;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -13,13 +14,22 @@ import com.nhngcmnh.example.identity_service.dto.request.ApiResponse;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+        /* ---------- LỖI KHÔNG ĐỦ QUYỀN ---------- */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleAccessDenied(AccessDeniedException ex) {
+        return buildResponse(
+                ErrorCode.UNAUTHORIZATION,
+                ErrorCode.UNAUTHORIZATION.getStatus(),
+                null
+        );
+    }
 
     /* ---------- LỖI ĐÃ ĐỊNH NGHĨA BẰNG AppException ---------- */
     @ExceptionHandler(AppException.class)
     public ResponseEntity<ApiResponse<Object>> handleAppException(AppException ex) {
         return buildResponse(
                 ex.getErrorCode(),           // mã lỗi đặc thù
-                HttpStatus.BAD_REQUEST,      // HTTP 400
+                ex.getErrorCode().getStatus(),
                 null
         );
     }
@@ -28,7 +38,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleNoSuchElement(NoSuchElementException ex) {
         return buildResponse(
                 ErrorCode.RESOURCE_NOT_FOUND,
-                HttpStatus.NOT_FOUND,
+                ErrorCode.RESOURCE_NOT_FOUND.getStatus(),
                 null
         );
     }
@@ -38,7 +48,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleRuntime(RuntimeException ex) {
         return buildResponse(
                 ErrorCode.INTERNAL_ERROR,
-                HttpStatus.INTERNAL_SERVER_ERROR,
+                ErrorCode.INTERNAL_ERROR.getStatus(),
                 null
         );
     }
@@ -48,7 +58,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleGeneric(Exception ex) {
         return buildResponse(
                 ErrorCode.INTERNAL_ERROR,
-                HttpStatus.INTERNAL_SERVER_ERROR,
+                ErrorCode.INTERNAL_ERROR.getStatus(),
                 null
         );
     }
@@ -69,29 +79,25 @@ public class GlobalExceptionHandler {
     }
     /* ---------- LỖI VALIDATION ---------- */
 @ExceptionHandler(MethodArgumentNotValidException.class)
-public ResponseEntity<ApiResponse<Object>> handleValidationException(MethodArgumentNotValidException ex) {
-    FieldError fieldError = ex.getBindingResult().getFieldError();
-
-    ErrorCode errorCode = ErrorCode.INVALID_KEY; // fallback mặc định
-
-    if (fieldError != null) {
-        try {
-            // Giả sử message chính là tên của ErrorCode enum
-            errorCode = ErrorCode.valueOf(fieldError.getDefaultMessage());
-        } catch (IllegalArgumentException e) {
-            // Nếu không khớp enum nào, giữ fallback là INVALID_KEY
+    public ResponseEntity<ApiResponse<Object>> handleValidationException(MethodArgumentNotValidException ex) {
+        FieldError fieldError = ex.getBindingResult().getFieldError();
+        ErrorCode errorCode = ErrorCode.INVALID_KEY; // fallback mặc định
+        if (fieldError != null) {
+            try {
+                // Giả sử message chính là tên của ErrorCode enum
+                errorCode = ErrorCode.valueOf(fieldError.getDefaultMessage());
+            } catch (IllegalArgumentException e) {
+                // Nếu không khớp enum nào, giữ fallback là INVALID_KEY
+            }
         }
+        ApiResponse<Object> body = new ApiResponse<>(
+                false,
+                errorCode.getMessage(),
+                errorCode.getCode(),
+                null
+        );
+        return ResponseEntity.status(errorCode.getStatus()).body(body);
     }
-
-    ApiResponse<Object> body = new ApiResponse<>(
-            false,
-            errorCode.getMessage(),
-            errorCode.getCode(),
-            null
-    );
-
-    return ResponseEntity.badRequest().body(body);
-}
 
 
 }
