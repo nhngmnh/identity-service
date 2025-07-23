@@ -25,7 +25,7 @@ public class AuthService {
     // Tạo chuỗi scope chuẩn từ roles, cách nhau bởi dấu cách
     private String builderScope(User user) {
         if (user.getRoles() == null || user.getRoles().isEmpty()) return "";
-        return String.join(" ", user.getRoles());
+        return String.join(" ", user.getRoles().stream().map(Object::toString).toList());
     }
     @Autowired
     private UserRepository userRepository;

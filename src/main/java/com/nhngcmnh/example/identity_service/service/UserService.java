@@ -13,6 +13,7 @@ import com.nhngcmnh.example.identity_service.exception.AppException;
 import com.nhngcmnh.example.identity_service.exception.ErrorCode;
 import com.nhngcmnh.example.identity_service.mapper.UserMapper;
 import com.nhngcmnh.example.identity_service.repository.UserRepository;
+import com.nhngcmnh.example.identity_service.repository.RoleRepository;
 import com.nhngcmnh.example.identity_service.dto.request.UserCreationRequest;
 import com.nhngcmnh.example.identity_service.dto.request.UserUpdateRequest;
 import com.nhngcmnh.example.identity_service.dto.response.UserResponse;
@@ -21,6 +22,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Service
 public class UserService {
+    @Autowired
+    private RoleRepository roleRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -35,14 +38,29 @@ public class UserService {
         }
 
         User user = userMapper.toUser(request);
-        // Set role mặc định là USER
-        java.util.HashSet<String> roles = new java.util.HashSet<>();
-        roles.add("USER");
+        // Ánh xạ role từ request sang entity nếu request có trường roles
+        java.util.Set<com.nhngcmnh.example.identity_service.entity.Role> roles = new java.util.HashSet<>();
+        try {
+            java.lang.reflect.Field rolesField = request.getClass().getDeclaredField("roles");
+            rolesField.setAccessible(true);
+            Object roleNames = rolesField.get(request);
+            if (roleNames instanceof java.util.Set<?>) {
+                for (Object roleName : (java.util.Set<?>) roleNames) {
+                    if (roleName != null) {
+                        com.nhngcmnh.example.identity_service.entity.Role role = roleRepository.findById(roleName.toString())
+                            .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND));
+                        roles.add(role);
+                    }
+                }
+            }
+        } catch (NoSuchFieldException | IllegalAccessException ignored) {}
         user.setRoles(roles);
         // Mã hóa mật khẩu trước khi lưu
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         userRepository.save(user);
-        return userMapper.toUserResponse(user);
+        // Đảm bảo trả về response có đủ thông tin role (và permission nếu cần)
+        User savedUser = userRepository.findById(user.getId()).orElse(user);
+        return userMapper.toUserResponse(savedUser);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
