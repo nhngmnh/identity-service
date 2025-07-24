@@ -17,6 +17,8 @@ import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import java.util.Date;
+import java.util.StringJoiner;
+
 import com.nhngcmnh.example.identity_service.dto.request.IntrospectRequest;
 import com.nhngcmnh.example.identity_service.dto.response.IntrospectResponse;
 
@@ -24,8 +26,17 @@ import com.nhngcmnh.example.identity_service.dto.response.IntrospectResponse;
 public class AuthService {
     // Tạo chuỗi scope chuẩn từ roles, cách nhau bởi dấu cách
     private String builderScope(User user) {
+        StringJoiner stringJoiner = new StringJoiner(" ");
         if (user.getRoles() == null || user.getRoles().isEmpty()) return "";
-        return String.join(" ", user.getRoles().stream().map(Object::toString).toList());
+        user.getRoles().forEach(role ->{
+            stringJoiner.add("ROLE_"+role.getName());
+            if (!role.getPermissions().isEmpty()) {
+                role.getPermissions().forEach(permission -> {
+                    stringJoiner.add(permission.getName());
+                });
+            }
+        });
+        return stringJoiner.toString();
     }
     @Autowired
     private UserRepository userRepository;

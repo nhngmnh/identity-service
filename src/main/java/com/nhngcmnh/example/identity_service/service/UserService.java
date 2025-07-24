@@ -2,12 +2,15 @@
 package com.nhngcmnh.example.identity_service.service;
 import org.springframework.security.access.prepost.PreAuthorize;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.nhngcmnh.example.identity_service.entity.Role;
 import com.nhngcmnh.example.identity_service.entity.User;
 import com.nhngcmnh.example.identity_service.exception.AppException;
 import com.nhngcmnh.example.identity_service.exception.ErrorCode;
@@ -19,11 +22,11 @@ import com.nhngcmnh.example.identity_service.dto.request.UserUpdateRequest;
 import com.nhngcmnh.example.identity_service.dto.response.UserResponse;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
-
 @Service
 public class UserService {
     @Autowired
     private RoleRepository roleRepository;
+
 
     @Autowired
     private UserRepository userRepository;
@@ -39,7 +42,7 @@ public class UserService {
 
         User user = userMapper.toUser(request);
         // Ánh xạ role từ request sang entity nếu request có trường roles
-        java.util.Set<com.nhngcmnh.example.identity_service.entity.Role> roles = new java.util.HashSet<>();
+        Set<Role> roles = new HashSet<>();
         try {
             java.lang.reflect.Field rolesField = request.getClass().getDeclaredField("roles");
             rolesField.setAccessible(true);
@@ -47,13 +50,15 @@ public class UserService {
             if (roleNames instanceof java.util.Set<?>) {
                 for (Object roleName : (java.util.Set<?>) roleNames) {
                     if (roleName != null) {
-                        com.nhngcmnh.example.identity_service.entity.Role role = roleRepository.findById(roleName.toString())
+                        Role role = roleRepository.findById(roleName.toString())
                             .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND));
                         roles.add(role);
                     }
                 }
             }
-        } catch (NoSuchFieldException | IllegalAccessException ignored) {}
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new AppException(ErrorCode.INTERNAL_ERROR);
+        }
         user.setRoles(roles);
         // Mã hóa mật khẩu trước khi lưu
         user.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -96,7 +101,16 @@ public class UserService {
         if (request.getPassword() != null && !request.getPassword().isBlank()) {
             user.setPassword(passwordEncoder.encode(request.getPassword()));
         }
-        userRepository.save(user);
+        // Ánh xạ role từ request sang entity nếu có trường roles
+        if (request.getRoles() != null) {
+            Set<Role> roles = new HashSet<>();
+            for (String roleName : request.getRoles()) {
+                Role role = roleRepository.findById(roleName)
+                    .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND));
+                roles.add(role);
+            }
+            user.setRoles(roles);
+        }
         return userMapper.toUserResponse(user);
     }
 }

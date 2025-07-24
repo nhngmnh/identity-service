@@ -1,8 +1,5 @@
 
 package com.nhngcmnh.example.identity_service.config;
-import com.nhngcmnh.example.identity_service.dto.request.ApiResponse;
-import com.nhngcmnh.example.identity_service.exception.ErrorCode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,7 +26,7 @@ public class SecurityConfig {
             if (scope == null) return java.util.Collections.emptyList();
             java.util.List<org.springframework.security.core.GrantedAuthority> authorities = new java.util.ArrayList<>();
             for (String role : scope.split(" ")) {
-                authorities.add(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + role));
+                authorities.add(new org.springframework.security.core.authority.SimpleGrantedAuthority("" + role));
             }
             return authorities;
         });
@@ -54,17 +51,7 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
             .exceptionHandling(exception -> exception
-                .authenticationEntryPoint((request, response, authException) -> {
-                    response.setStatus(ErrorCode.UNAUTHENTICATION.getStatus().value());
-                    response.setContentType("application/json");
-                    ApiResponse<Object> body = new ApiResponse<>(
-                        false,
-                        ErrorCode.UNAUTHENTICATION.getMessage(),
-                        ErrorCode.UNAUTHENTICATION.getCode(),
-                        null
-                    );
-                    new ObjectMapper().writeValue(response.getOutputStream(), body);
-                })
+                .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {
                 jwt.decoder(jwtDecoder());
