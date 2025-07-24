@@ -41,25 +41,6 @@ public class UserService {
         }
 
         User user = userMapper.toUser(request);
-        // Ánh xạ role từ request sang entity nếu request có trường roles
-        Set<Role> roles = new HashSet<>();
-        try {
-            java.lang.reflect.Field rolesField = request.getClass().getDeclaredField("roles");
-            rolesField.setAccessible(true);
-            Object roleNames = rolesField.get(request);
-            if (roleNames instanceof java.util.Set<?>) {
-                for (Object roleName : (java.util.Set<?>) roleNames) {
-                    if (roleName != null) {
-                        Role role = roleRepository.findById(roleName.toString())
-                            .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND));
-                        roles.add(role);
-                    }
-                }
-            }
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new AppException(ErrorCode.INTERNAL_ERROR);
-        }
-        user.setRoles(roles);
         // Mã hóa mật khẩu trước khi lưu
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         userRepository.save(user);
