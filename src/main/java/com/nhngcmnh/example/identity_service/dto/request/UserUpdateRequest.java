@@ -3,6 +3,8 @@ package com.nhngcmnh.example.identity_service.dto.request;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.nhngcmnh.example.identity_service.validator.DobConstraint;
+
 import jakarta.persistence.Id;
 import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
@@ -26,6 +28,8 @@ public class UserUpdateRequest {
      String username;
      String firstName;
      String lastName;
+     @DobConstraint(min=16, message = "INVALID_DOB")
      LocalDate dob;
+
      List<String> roles; // Assuming roles are represented as a list of role IDs or names
 }

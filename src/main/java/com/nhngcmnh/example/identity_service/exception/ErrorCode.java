@@ -8,6 +8,7 @@ public enum ErrorCode {
     RESOURCE_NOT_FOUND(1004, "Không tìm thấy tài nguyên", HttpStatus.NOT_FOUND),
     UNAUTHENTICATION(4010, "Chưa xác thực hoặc token không hợp lệ", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZATION(4030, "Không có quyền truy cập tài nguyên", HttpStatus.FORBIDDEN),
+    INVALID_DOB(1016, "Tuổi phải >= {min}", HttpStatus.BAD_REQUEST),
     INVALID_KEY(9999,"Lỗi không xác định", HttpStatus.BAD_REQUEST),
     INTERNAL_ERROR(1999, "Lỗi hệ thống", HttpStatus.INTERNAL_SERVER_ERROR);
 
