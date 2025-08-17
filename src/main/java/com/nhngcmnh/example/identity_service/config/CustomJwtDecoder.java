@@ -27,12 +27,14 @@ public class CustomJwtDecoder implements JwtDecoder {
     @Override
     public Jwt decode(String token) throws JwtException {
         Claims claims;
+        java.util.Map<String, Object> headers;
         try {
-            claims = Jwts.parserBuilder()
+            var jws = Jwts.parserBuilder()
                     .setSigningKey(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)))
                     .build()
-                    .parseClaimsJws(token)
-                    .getBody();
+                    .parseClaimsJws(token);
+            claims = jws.getBody();
+            headers = jws.getHeader();
         } catch (Exception e) {
             throw new JwtException("Token parsing failed: " + e.getMessage(), e);
         }
@@ -46,13 +48,12 @@ public class CustomJwtDecoder implements JwtDecoder {
         if (randomId != null && invalidTokenRepository.existsById(randomId)) {
             throw new JwtValidationException("Token has been invalidated (logout or expired)", Collections.emptyList());
         }
-        // Build Jwt object
+        // Build Jwt object with original headers
         return Jwt.withTokenValue(token)
-                .headers(h -> h.putAll(Collections.emptyMap()))
+                .headers(h -> h.putAll(headers))
                 .claims(c -> c.putAll(claims))
                 .issuedAt(claims.getIssuedAt().toInstant())
                 .expiresAt(expiryDate.toInstant())
                 .build();
     }
 }
-
