@@ -24,6 +24,9 @@ import com.nhngcmnh.example.identity_service.dto.request.IntrospectRequest;
 import com.nhngcmnh.example.identity_service.dto.response.IntrospectResponse;
 import com.nhngcmnh.example.identity_service.repository.InvalidTokenRepository;
 import io.jsonwebtoken.Claims;
+import com.nhngcmnh.example.identity_service.dto.request.RefreshTokenRequest;
+import com.nhngcmnh.example.identity_service.dto.response.RefreshTokenResponse;
+import com.nhngcmnh.example.identity_service.dto.request.LogoutRequest;
 
 @Service
 @Slf4j
@@ -121,7 +124,8 @@ public class AuthService {
                 .compact();
     }
 
-    public void logout(String token) {
+    public void logout(LogoutRequest request) {
+        String token = request.getToken();
         Claims claims = Jwts.parserBuilder()
             .setSigningKey(Keys.hmacShaKeyFor(JWT_SECRET.getBytes()))
             .build()
@@ -136,5 +140,53 @@ public class AuthService {
         } else {
             log.info("[LOGOUT] Token already invalidated: {}", randomId);
         }
+    }
+
+    public RefreshTokenResponse refreshToken(RefreshTokenRequest request) {
+        String token = request.getToken();
+        Claims claims;
+        try {
+            claims = Jwts.parserBuilder()
+                .setSigningKey(Keys.hmacShaKeyFor(JWT_SECRET.getBytes()))
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        } catch (Exception e) {
+            return RefreshTokenResponse.builder()
+                .success(false)
+                .message("Token không hợp lệ")
+                .code(400)
+                .token(null)
+                .build();
+        }
+        String randomId = claims.get("randomId", String.class);
+        Date expiryDate = claims.getExpiration();
+        String userId = claims.getSubject();
+        // Invalidate old token
+        if (!invalidTokenRepository.existsById(randomId)) {
+            InvalidToken entity = new InvalidToken(randomId, expiryDate);
+            invalidTokenRepository.save(entity);
+            log.info("[REFRESH] Token invalidated: {}", randomId);
+        } else {
+            log.info("[REFRESH] Token already invalidated: {}", randomId);
+        }
+        // Check user exists
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            return RefreshTokenResponse.builder()
+                .success(false)
+                .message("User không tồn tại")
+                .code(404)
+                .token(null)
+                .build();
+        }
+        // Generate new token
+        String newToken = generateToken(user);
+        return RefreshTokenResponse.builder()
+            .success(true)
+            .message("Refresh token thành công")
+            .code(0)
+            .token(newToken)
+            .build();
     }
 }
