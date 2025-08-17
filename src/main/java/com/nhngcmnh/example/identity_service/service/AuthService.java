@@ -1,6 +1,6 @@
-
 package com.nhngcmnh.example.identity_service.service;
 
+import com.nhngcmnh.example.identity_service.entity.InvalidToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,6 +22,8 @@ import java.util.StringJoiner;
 
 import com.nhngcmnh.example.identity_service.dto.request.IntrospectRequest;
 import com.nhngcmnh.example.identity_service.dto.response.IntrospectResponse;
+import com.nhngcmnh.example.identity_service.repository.InvalidTokenRepository;
+import io.jsonwebtoken.Claims;
 
 @Service
 @Slf4j
@@ -64,6 +66,8 @@ public class AuthService {
     private UserRepository userRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private InvalidTokenRepository invalidTokenRepository;
 
     @Value("${jwt.secret}")
     protected String JWT_SECRET;
@@ -105,13 +109,32 @@ public class AuthService {
     private String generateToken(User user) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + EXPIRATION_TIME);
+        String randomId = java.util.UUID.randomUUID().toString();
         return Jwts.builder()
                 .setSubject(user.getId())
-               // .claim("user", user)
-               .claim("scope", builderScope(user))
+                .claim("user", user)
+                .claim("scope", builderScope(user))
+                .claim("randomId", randomId)
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(Keys.hmacShaKeyFor(JWT_SECRET.getBytes()), SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    public void logout(String token) {
+        Claims claims = Jwts.parserBuilder()
+            .setSigningKey(Keys.hmacShaKeyFor(JWT_SECRET.getBytes()))
+            .build()
+            .parseClaimsJws(token)
+            .getBody();
+        String randomId = claims.get("randomId", String.class);
+        Date expiryDate = claims.getExpiration();
+        if (!invalidTokenRepository.existsById(randomId)) {
+            InvalidToken entity = new InvalidToken(randomId, expiryDate);
+            invalidTokenRepository.save(entity);
+            log.info("[LOGOUT] Token invalidated: {}", randomId);
+        } else {
+            log.info("[LOGOUT] Token already invalidated: {}", randomId);
+        }
     }
 }

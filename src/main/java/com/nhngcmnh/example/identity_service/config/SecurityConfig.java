@@ -1,6 +1,6 @@
-
 package com.nhngcmnh.example.identity_service.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -11,13 +11,11 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import io.jsonwebtoken.security.Keys;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 
 @Configuration
 @Slf4j
 public class SecurityConfig {
+
     @Bean
     public org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter jwtAuthenticationConverter() {
         var converter = new org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter();
@@ -34,7 +32,10 @@ public class SecurityConfig {
     }
     @Value("${jwt.secret}")
     private String jwtSecret;
-    
+
+    @Autowired
+    private CustomJwtDecoder customJwtDecoder;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -55,15 +56,10 @@ public class SecurityConfig {
                 .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
             )
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> {
-                jwt.decoder(jwtDecoder());
+                jwt.decoder(customJwtDecoder);
                 jwt.jwtAuthenticationConverter(jwtAuthenticationConverter());
             }));
         return http.build();
-    }
-
-    @Bean
-    public JwtDecoder jwtDecoder() {
-        return NimbusJwtDecoder.withSecretKey(Keys.hmacShaKeyFor(jwtSecret.getBytes())).build();
     }
 
 }

@@ -1,7 +1,8 @@
 package com.nhngcmnh.example.identity_service.validator;
 
+import jakarta.validation.Constraint;
+import jakarta.validation.Payload;
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -14,7 +15,7 @@ import java.lang.annotation.Target;
    validatedBy = {DobValidator.class}
 )
 public @interface DobConstraint {
-    String message() default "INVALID_DOB";
+    String message() default "Tuổi phải >= {min}";
     
     int min();
 

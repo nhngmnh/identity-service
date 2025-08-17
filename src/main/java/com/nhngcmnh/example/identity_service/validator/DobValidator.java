@@ -1,5 +1,10 @@
 package com.nhngcmnh.example.identity_service.validator;
 
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
+
+import java.time.LocalDate;
+
 public class DobValidator implements ConstraintValidator<DobConstraint, LocalDate> {
 
     private int min;
